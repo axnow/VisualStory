@@ -14,9 +14,28 @@
     // Your beautiful D3 code will go here
     //get data:
     $.getJSON("data/events.json", function (data) {
-        console.info("Got json, has size: " + data.length)
+        console.info("Got json, has size: " + data.length);
+        buildEventPars(data)
     });
 
+    function eventText(event) {
+        return event.date+": "+event.name;
+    }
+
+    function buildEventPars(events) {
+        // Update…
+        var p = d3.select("body")
+            .selectAll("p")
+            .data(events)
+            .text(function(d) { return eventText(d); });
+
+// Enter…
+        p.enter().append("p")
+            .text(function(d) { return eventText(d); });
+
+// Exit…
+        p.exit().remove();
+    }
 </script>
 </body>
 </html>
