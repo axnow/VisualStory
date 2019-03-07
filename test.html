@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Test page</title>
+    <script type="text/javascript" src="js/jquery/jquery-3.3.1.js"></script>
+    <script type="text/javascript" src="js/bootstrap.js"></script>
+    <script type="text/javascript" src="js/d3.js"></script>
+</head>
+<body>
+<h1>Hello World</h1>
+<script type="text/javascript">
+    d3.select("body").append("p").text("New paragraph!");
+    // Your beautiful D3 code will go here
+    //get data:
+    $.getJSON("data/events.json", function (data) {
+        console.info("Got json, has size: " + data.length)
+    });
+
+</script>
+</body>
+</html>
