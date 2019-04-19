@@ -128,8 +128,18 @@
     </div>
 </div>
 
-<script type="text/javascript">
+<script type="text/ecmascript">
+    function refreshGraphSize() {
+        width = $('#myChart').width();
+        height = $('#myChart').height();
+        console.log("Refreshig size, w=" + width + " h=" + height);
+        updateRect();
+    }
 
+
+
+
+    //d3js
     $.getJSON("data/events.json", function (data) {
         console.info("Got json, has size: " + data.length);
         buildEventPars(data)
@@ -155,8 +165,41 @@
             });
 
 // Exit…
+
+
         p.exit().remove();
     }
+    var rect = d3.select("#myChart").append("rect");
+
+    function updateRect() {
+        var rect = d3.select("#myChart").select("rect");
+        rect.attr("width", width-10);
+        rect.attr("height", height-10);
+        rect.attr("x", 5);
+        rect.attr("y", 5);
+        rect.style("fill","rgb(0,0,255)");
+        rect.style("stroke-width","3");
+        rect.style("stroke","rgb(255,0,0)");
+    }
+
+    document.getElementById("myChart").addEventListener("click", function () {
+        console.log("tick")
+    });
+    document.getElementById("myChart").addEventListener("show", function () {
+        console.log("task")
+    });
+    // $('#myChart').resize(function() {console.log("afadsfasdfafda")})
+    $(window).resize(refreshGraphSize);
+    window.addEventListener("load", function() {
+        console.log("Onload.");
+        setTimeout(refreshGraphSize, 1000);
+        // refreshGraphSize();
+    });
+
+
+
+
+
 </script>
 
 
