@@ -4,16 +4,18 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <title>Test page</title>
+    <title>Visual History Workbench</title>
 
     <link rel="stylesheet" href="css/bootstrap.css">
     <link rel="stylesheet" href="css/vis-history.css">
+    <link rel="stylesheet" href="css/dashboard.css">
+    <link rel="stylesheet" href="css/timeline-graph.css">
 
 
     <script type="text/javascript" src="js/jquery/jquery-3.3.1.js"></script>
     <script type="text/javascript" src="js/bootstrap.js"></script>
     <script type="text/javascript" src="js/d3.js"></script>
-    <script src="../bootstrap-4.3/site/docs/4.3/examples/dashboard/dashboard.js"></script>
+    <script type="text/javascript" src="js/dashboard.js"></script>
 </head>
 
 <body>
@@ -134,9 +136,8 @@
         height = $('#myChart').height();
         console.log("Refreshig size, w=" + width + " h=" + height);
         updateRect();
+        updateAxisLine();
     }
-
-
 
 
     //d3js
@@ -169,17 +170,16 @@
 
         p.exit().remove();
     }
+
     var rect = d3.select("#myChart").append("rect");
 
     function updateRect() {
         var rect = d3.select("#myChart").select("rect");
-        rect.attr("width", width-10);
-        rect.attr("height", height-10);
+        rect.attr("width", width - 10);
+        rect.attr("height", height - 10);
         rect.attr("x", 5);
         rect.attr("y", 5);
-        rect.style("fill","rgb(0,0,255)");
-        rect.style("stroke-width","3");
-        rect.style("stroke","rgb(255,0,0)");
+        rect.style("fill", "rgb(0,0,255)").style("stroke-width", "3").style("stroke", "rgb(255,0,0)").style("opacity", "0.05");
     }
 
     document.getElementById("myChart").addEventListener("click", function () {
@@ -190,14 +190,53 @@
     });
     // $('#myChart').resize(function() {console.log("afadsfasdfafda")})
     $(window).resize(refreshGraphSize);
-    window.addEventListener("load", function() {
+    window.addEventListener("load", function () {
         console.log("Onload.");
         setTimeout(refreshGraphSize, 1000);
         // refreshGraphSize();
+        setTimeout(initGraph, 1100);
     });
 
 
+    var axisPosition = 120;
 
+    function initGraph() {
+        //add axis line
+        d3.select("#myChart").append("line").classed("timeAxis", true).attr("id", "timeAxis");
+        updateAxisLine();
+        updateTimeAxisScale();
+    }
+
+    function updateTimeAxisScale() {
+        console.log("Updating time scale")
+        var scale = d3.scaleTime()
+            .domain([new Date(1918, 0, 1), new Date(1939, 12, 31)])
+            .range([height, 0]);
+
+        //test code:
+        var years = [];
+        for (var y = 1918; y < 1940;y++) {
+            years.push(y);
+        }
+        var yearsSelection = d3.select("#myChart").selectAll(".timeAxisTick").data(years);
+        yearsSelection.enter()
+            .append("circle")
+            .attr("cx", axisPosition)
+            .attr("cy", function (year) {
+                return scale(new Date(year, 0, 1));
+            })
+            .attr("r", 4).classed("timeAxisTick");
+        yearsSelection.exit().remove();
+
+    }
+
+    function updateAxisLine() {
+        d3.select("#timeAxis")
+            .attr("x1", axisPosition)
+            .attr("y1", 0)
+            .attr("x2", axisPosition)
+            .attr("y2", height);
+    }
 
 
 </script>
