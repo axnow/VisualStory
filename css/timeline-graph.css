@@ -3,7 +3,11 @@
     stroke-width: 3px;
 }
 
-.timeAxisTick {
+.timeAxisTick  {
     stroke:none;
+    fill: blue;
+}
+
+.timeAxisTick text  {
     fill: black;
 }

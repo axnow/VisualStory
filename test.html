@@ -15,7 +15,6 @@
     <script type="text/javascript" src="js/jquery/jquery-3.3.1.js"></script>
     <script type="text/javascript" src="js/bootstrap.js"></script>
     <script type="text/javascript" src="js/d3.js"></script>
-    <script type="text/javascript" src="js/dashboard.js"></script>
 </head>
 
 <body>
@@ -37,19 +36,19 @@
                     <li class="nav-item">
                         <a class="nav-link active" href="#">
                             <span data-feather="home"></span>
-                            Dashboard <span class="sr-only">(current)</span>
+                            Nawigacja<span class="sr-only">(current)</span>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link" href="#" onclick="moveForward()">
                             <span data-feather="file"></span>
-                            Orders
+                            Do przodu
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="#">
+                        <a class="nav-link" href="#" onclick="moveBackward()">
                             <span data-feather="shopping-cart"></span>
-                            Products
+                            Do tyłu
                         </a>
                     </li>
                     <li class="nav-item">
@@ -124,18 +123,26 @@
             <div class="my-4 w-100" style="height: 90%">
                 <svg id="myChart" width="100%" height="100%" style="border-style: solid; border-color:black"></svg>
             </div>
-            <h2>Text content</h2>
-            <div id="entries"></div>
+            <!--            <h2>Text content</h2>-->
+            <!--            <div id="entries"></div>-->
         </main>
     </div>
 </div>
 
 <script type="text/ecmascript">
+    window.viewport = {}
+    viewport.axisPosition = 120;
+    viewport.yearSize = 50;
+    viewport.firstYear = 1918;
+    viewport.scaleOffset = 0;
+    viewport.scale = d3.scaleTime();
+
+
     function refreshGraphSize() {
-        width = $('#myChart').width();
-        height = $('#myChart').height();
-        console.log("Refreshig size, w=" + width + " h=" + height);
-        updateRect();
+        viewport.width = $('#myChart').width();
+        viewport.height = $('#myChart').height();
+        console.log("Refreshig size, w=" + viewport.width + " h=" + viewport.height);
+        // updateRect();
         updateAxisLine();
     }
 
@@ -143,7 +150,7 @@
     //d3js
     $.getJSON("data/events.json", function (data) {
         console.info("Got json, has size: " + data.length);
-        buildEventPars(data)
+        // buildEventPars(data)
     });
 
     function eventText(event) {
@@ -166,30 +173,35 @@
             });
 
 // Exit…
-
-
         p.exit().remove();
     }
+
 
     var rect = d3.select("#myChart").append("rect");
 
     function updateRect() {
-        var rect = d3.select("#myChart").select("rect");
-        rect.attr("width", width - 10);
-        rect.attr("height", height - 10);
-        rect.attr("x", 5);
-        rect.attr("y", 5);
-        rect.style("fill", "rgb(0,0,255)").style("stroke-width", "3").style("stroke", "rgb(255,0,0)").style("opacity", "0.05");
+        var rect = d3.select("#myChart").select("rect")
+            .attr("width", viewport.width - 10)
+            .attr("height", viewport.height - 10)
+            .attr("x", 5)
+            .attr("y", 5)
+            .style("fill", "rgb(0,0,255)")
+            .style("stroke-width", "3")
+            .style("stroke", "rgb(255,0,0)")
+            .style("opacity", "0.05");
+
     }
 
-    document.getElementById("myChart").addEventListener("click", function () {
-        console.log("tick")
-    });
-    document.getElementById("myChart").addEventListener("show", function () {
-        console.log("task")
-    });
-    // $('#myChart').resize(function() {console.log("afadsfasdfafda")})
+    // document.getElementById("myChart").addEventListener("click", function () {
+    //     console.log("tick")
+    // });
+    //
+    // document.getElementById("myChart").addEventListener("show", function () {
+    //     console.log("task")
+    // });
     $(window).resize(refreshGraphSize);
+
+
     window.addEventListener("load", function () {
         console.log("Onload.");
         setTimeout(refreshGraphSize, 1000);
@@ -197,48 +209,71 @@
         setTimeout(initGraph, 1100);
     });
 
-
-    var axisPosition = 120;
-
     function initGraph() {
         //add axis line
-        d3.select("#myChart").append("line").classed("timeAxis", true).attr("id", "timeAxis");
+        d3.select("#myChart")
+            .append("line")
+            .classed("timeAxis", true)
+            .attr("id", "timeAxis");
+
         updateAxisLine();
         updateTimeAxisScale();
     }
 
     function updateTimeAxisScale() {
         console.log("Updating time scale")
-        var scale = d3.scaleTime()
-            .domain([new Date(1918, 0, 1), new Date(1939, 12, 31)])
-            .range([height, 0]);
+        viewport.scale
+            .domain([new Date(viewport.firstYear, 0, 1), new Date(viewport.firstYear + 1, 0, 1)])
+            .range([viewport.height + viewport.scaleOffset, viewport.height - viewport.yearSize + viewport.scaleOffset]);
 
         //test code:
         var years = [];
-        for (var y = 1918; y < 1940;y++) {
+        for (var y = 1918; y < 1940; y++) {
             years.push(y);
         }
-        var yearsSelection = d3.select("#myChart").selectAll(".timeAxisTick").data(years);
-        yearsSelection.enter()
-            .append("circle")
-            .attr("cx", axisPosition)
-            .attr("cy", function (year) {
-                return scale(new Date(year, 0, 1));
-            })
-            .attr("r", 4).classed("timeAxisTick");
-        yearsSelection.exit().remove();
 
+        var yearsSelection = d3.select("#myChart").selectAll(".timeAxisTick").data(years);
+        var groups = yearsSelection.enter().append("g");
+        groups
+            .attr("transform", function (year) {
+                return "translate(" + viewport.axisPosition + ", " + viewport.scale(new Date(year, 0, 1)) + ")";
+            })
+            .classed("timeAxisTick", true);
+        groups.append("circle")
+            .attr("r", 4);
+        groups.append("text")
+            .attr("text-anchor", "end")
+            .attr("dx", "-10")
+            .attr("dominant-baseline", "middle")
+            .text(function (year) {
+                return "" + year;
+            });
+
+        yearsSelection.exit().remove();
     }
 
     function updateAxisLine() {
         d3.select("#timeAxis")
-            .attr("x1", axisPosition)
+            .attr("x1", viewport.axisPosition)
             .attr("y1", 0)
-            .attr("x2", axisPosition)
-            .attr("y2", height);
+            .attr("x2", viewport.axisPosition)
+            .attr("y2", viewport.height);
     }
 
 
+    function moveForward() {
+        console.log("Moving forward...");
+        viewport.scaleOffset += 10;
+        updateTimeAxisScale();
+        // window.scale.range()
+    }
+
+    function moveBackward() {
+        console.log("Moving backward...");
+        viewport.scaleOffset -= 10;
+        updateTimeAxisScale();
+        // window.scale.range()
+    }
 </script>
 
 
