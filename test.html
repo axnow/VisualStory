@@ -8,7 +8,7 @@
 
     <link rel="stylesheet" href="css/bootstrap.css">
     <link rel="stylesheet" href="css/vis-history.css">
-    <link rel="stylesheet" href="css/dashboard.css">
+<!--    <link rel="stylesheet" href="css/dashboard.css">-->
     <link rel="stylesheet" href="css/timeline-graph.css">
 
 
@@ -28,8 +28,8 @@
     </ul>
 </nav>
 
-<div class="container-fluid">
-    <div class="row">
+<div class="container-fluid h-100" >
+    <div class="row h-75">
         <nav class="col-md-2 d-none d-md-block bg-light sidebar">
             <div class="sidebar-sticky">
                 <ul class="nav flex-column">
@@ -106,7 +106,7 @@
             </div>
         </nav>
 
-        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+        <main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4 h-100">
             <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
                 <h1 class="h2">Dashboard</h1>
                 <div class="btn-toolbar mb-2 mb-md-0">
@@ -222,7 +222,7 @@
 
     function updateTimeAxisScale() {
         console.log("Updating time scale")
-        viewport.scale
+        viewport.scale=d3.scaleTime()
             .domain([new Date(viewport.firstYear, 0, 1), new Date(viewport.firstYear + 1, 0, 1)])
             .range([viewport.height + viewport.scaleOffset, viewport.height - viewport.yearSize + viewport.scaleOffset]);
 
@@ -231,8 +231,11 @@
         for (var y = 1918; y < 1940; y++) {
             years.push(y);
         }
-
+        // d3.selectAll(".timeAxisTick").data([]).remove();
         var yearsSelection = d3.select("#myChart").selectAll(".timeAxisTick").data(years);
+        yearsSelection.attr("transform", function (year) {
+            return "translate(" + viewport.axisPosition + ", " + viewport.scale(new Date(year, 0, 1)) + ")";
+        });
         var groups = yearsSelection.enter().append("g");
         groups
             .attr("transform", function (year) {
