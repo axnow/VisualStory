@@ -12,6 +12,10 @@ html,body {
     vertical-align: text-bottom;
 }
 
+.maxw {
+    height: calc(100vh - 50px);
+}
+
 /*
  * Sidebar
  */

@@ -8,7 +8,7 @@
 
     <link rel="stylesheet" href="css/bootstrap.css">
     <link rel="stylesheet" href="css/vis-history.css">
-<!--    <link rel="stylesheet" href="css/dashboard.css">-->
+    <!--    <link rel="stylesheet" href="css/dashboard.css">-->
     <link rel="stylesheet" href="css/timeline-graph.css">
 
 
@@ -28,8 +28,8 @@
     </ul>
 </nav>
 
-<div class="container-fluid h-100" >
-    <div class="row h-75">
+<div class="container-fluid h-100">
+    <div class="row maxw">
         <nav class="col-md-2 d-none d-md-block bg-light sidebar">
             <div class="sidebar-sticky">
                 <ul class="nav flex-column">
@@ -130,13 +130,21 @@
 </div>
 
 <script type="text/ecmascript">
-    window.viewport = {}
+    console.log("Script start...");
+
+    window.viewport = {};
+
+    viewport.width = 100;
+    viewport.height = 100;
     viewport.axisPosition = 120;
     viewport.yearSize = 50;
     viewport.firstYear = 1918;
+    viewport.displayStartDate = new Date("1918-01-01");
     viewport.scaleOffset = 0;
     viewport.scale = d3.scaleTime();
 
+    console.log("Viewport state:");
+    console.log(viewport);
 
     function refreshGraphSize() {
         viewport.width = $('#myChart').width();
@@ -146,15 +154,38 @@
         updateAxisLine();
     }
 
-
-    //d3js
-    $.getJSON("data/events.json", function (data) {
-        console.info("Got json, has size: " + data.length);
-        // buildEventPars(data)
-    });
+    function loadData() {
+        //d3js
+        $.getJSON("data/events.json", function (data) {
+            console.info("Got json, has size: " + data.length);
+            // buildEventPars(data)
+            updateItems(data)
+        });
+    }
 
     function eventText(event) {
         return event.date + ": " + event.name;
+    }
+
+
+    function updateItems(items) {
+        console.log("Adding items:");
+        console.log(items);
+        //rect with text:
+        d3.select("#myChart").append("g").attr("id", "events");
+        var itemSelection = d3.select("#events").selectAll("g.item");
+        itemSelection.data(items)
+            .enter()
+            .append("g")
+            .classed("item", true)
+            .attr("transform", function (event) {
+                var d = new Date(event.date);
+                console.log(d);
+                return "translate(" + (50 + viewport.axisPosition) + ", " + viewport.scale(d) + ")";
+            })
+            .append("rect")
+            .attr("width", 150)
+            .attr("height", 50);
     }
 
     function buildEventPars(events) {
@@ -176,31 +207,7 @@
         p.exit().remove();
     }
 
-
-    var rect = d3.select("#myChart").append("rect");
-
-    function updateRect() {
-        var rect = d3.select("#myChart").select("rect")
-            .attr("width", viewport.width - 10)
-            .attr("height", viewport.height - 10)
-            .attr("x", 5)
-            .attr("y", 5)
-            .style("fill", "rgb(0,0,255)")
-            .style("stroke-width", "3")
-            .style("stroke", "rgb(255,0,0)")
-            .style("opacity", "0.05");
-
-    }
-
-    // document.getElementById("myChart").addEventListener("click", function () {
-    //     console.log("tick")
-    // });
-    //
-    // document.getElementById("myChart").addEventListener("show", function () {
-    //     console.log("task")
-    // });
     $(window).resize(refreshGraphSize);
-
 
     window.addEventListener("load", function () {
         console.log("Onload.");
@@ -210,21 +217,44 @@
     });
 
     function initGraph() {
+        //build main group:
+        d3.select("#myChart")
+            .append("g")
+            .attr("id", "mainGroup");
         //add axis line
         d3.select("#myChart")
             .append("line")
             .classed("timeAxis", true)
             .attr("id", "timeAxis");
 
+        refreshTimeScale();
+        updateGraphPosition();
         updateAxisLine();
-        updateTimeAxisScale();
+        updateTimeAxis();
+
+        var zoom = d3.zoom().scaleExtent([30, 150]);
+        d3.select("#myChart").call(zoom.on("zoom", zoomEvent));
+        loadData();
     }
 
-    function updateTimeAxisScale() {
+    function refreshTimeScale() {
         console.log("Updating time scale")
-        viewport.scale=d3.scaleTime()
+        viewport.scale = d3.scaleTime()
             .domain([new Date(viewport.firstYear, 0, 1), new Date(viewport.firstYear + 1, 0, 1)])
-            .range([viewport.height + viewport.scaleOffset, viewport.height - viewport.yearSize + viewport.scaleOffset]);
+            .range([0,  - viewport.yearSize]);
+    }
+
+    function updateGraphPosition() {
+        d3.select("#mainGroup")
+            .transition()
+            .duration(1000)
+            .attr("transform",
+                "translate(0, " + (viewport.height - viewport.scale(viewport.displayStartDate)) + ")");
+    }
+
+
+    function updateTimeAxis() {
+        refreshTimeScale();
 
         //test code:
         var years = [];
@@ -232,8 +262,8 @@
             years.push(y);
         }
         // d3.selectAll(".timeAxisTick").data([]).remove();
-        var yearsSelection = d3.select("#myChart").selectAll(".timeAxisTick").data(years);
-        yearsSelection.attr("transform", function (year) {
+        var yearsSelection = d3.select("#mainGroup").selectAll(".timeAxisTick").data(years);
+        yearsSelection.transition(1000).attr("transform", function (year) {
             return "translate(" + viewport.axisPosition + ", " + viewport.scale(new Date(year, 0, 1)) + ")";
         });
         var groups = yearsSelection.enter().append("g");
@@ -266,17 +296,23 @@
 
     function moveForward() {
         console.log("Moving forward...");
-        viewport.scaleOffset += 10;
-        updateTimeAxisScale();
-        // window.scale.range()
+        viewport.displayStartDate.setDate(viewport.displayStartDate.getDate()+ 100);
+        console.log(viewport.displayStartDate);
+        updateGraphPosition();
     }
 
     function moveBackward() {
         console.log("Moving backward...");
-        viewport.scaleOffset -= 10;
-        updateTimeAxisScale();
-        // window.scale.range()
+        viewport.displayStartDate.setDate(viewport.displayStartDate.getDate()- 100);
+        console.log(viewport.displayStartDate);
+        updateGraphPosition();
     }
+
+    function zoomEvent(event) {
+        viewport.yearSize = Math.round(d3.event.transform.k);
+        updateTimeAxis();
+    }
+
 </script>
 
 
