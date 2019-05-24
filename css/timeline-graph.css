@@ -11,3 +11,21 @@
 .timeAxisTick text  {
     fill: black;
 }
+
+.item rect {
+    stroke: black;
+    fill: white;
+    stroke-width: 2px;
+    box-shadow: darkgray;
+}
+
+rect.lane {
+    fill:  #f8d78f ;
+    stroke: #ffbd33 ;
+    stroke-width:2;
+    opacity:1;
+}
+
+.lane text {
+    fill: #FF5733;
+}
