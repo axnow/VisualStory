@@ -125,7 +125,7 @@
                 <svg id="myChart" width="100%" height="100%" style="border-style: solid; border-color:black">
                     <defs>
                         <filter id="shadow">
-                            <feDropShadow dx="3" dy="3" stdDeviation="2" />
+                            <feDropShadow dx="3" dy="3" stdDeviation="2"/>
                         </filter>
                     </defs>
                     <g id="lanes"></g>
@@ -150,13 +150,14 @@
     viewport.height = 100;
     viewport.axisPosition = 120;
     viewport.firstYear = 1910;
-    viewport.datesExtent = [new Date("1918-01-01"), new Date("1939-12-31")];
+    viewport.datesExtent = [new Date("1916-01-01"), new Date("1939-12-31")];
     viewport.displayStartDate = new Date("1918-01-01");
     viewport.scaleOffset = 0;
     viewport.scale = d3.scaleTime();
     viewport.scaleOrig = d3.scaleTime();
     viewport.lanes = [{name: "Wydarzenia", x: 130, width: 250}];
     viewport.zoom = d3.zoom().scaleExtent([1, 10]);
+    viewport.currentZoomLevel = 1;
 
 
     function initGraph() {
@@ -193,7 +194,7 @@
 
         d3.select("#myChart").call(viewport.zoom.on("zoom", zoomEvent));
         loadDataCsv();
-        loadData();
+        // loadData();
     }
 
     function refreshGraphSize() {
@@ -210,11 +211,15 @@
 
 
     function loadDataCsv() {
-        d3.csv("data/dwudziestolecie.csv").then(function(data, error) {
+        d3.csv("data/dwudziestolecie.csv").then(function (data, error) {
             console.log("Loaded csv");
             console.log(data);
             var instances = data.map(HistoryEvent.buildFromCsv);
             console.log(instances);
+            instances = instances.filter(ins => ins.isValid());
+            console.log("After filter:");
+            console.log(instances);
+            updateEvents(instances);
         });
     }
 
@@ -234,11 +239,17 @@
     function refreshEventView() {
         var lane = viewport.lanes[0];
         var itemSelection = d3.select("#events").selectAll("g.item");
-        itemSelection.transition().delay(100).attr("transform", function (event) {
-            var d = new Date(event.date);
-            // console.log(d);
-            return "translate(" + (5 + lane.x) + ", " + viewport.scale(d) + ")";
-        });
+        itemSelection
+            .transition()
+            .duration(100)
+            .attr("transform", function (event) {
+                var d = new Date(event.date);
+                // console.log(d);
+                return "translate(" + (5 + lane.x) + ", " + viewport.scale(d) + ")";
+            })
+            .attr("visibility", function (event) {
+                return event.visibleInZoom(viewport.currentZoomLevel) ? "visible" : "hidden";
+            });
 
     }
 
@@ -269,7 +280,7 @@
                 // console.log(d);
                 return "translate(" + (5 + lane.x) + ", " + viewport.scale(d) + ")";
             });
-        var corner=10;
+        var corner = 10;
 
         groupSelection.append("rect")
             .classed("item", true)
@@ -280,7 +291,7 @@
         ;
 
         groupSelection.append("line")
-            .attr("x1", -(lane.x-viewport.axisPosition+5))
+            .attr("x1", -(lane.x - viewport.axisPosition + 5))
             .attr("y1", 0)
             .attr("x2", corner)
             .attr("y2", 0);
@@ -309,25 +320,13 @@
         d3.selectAll("g.lane").select("rect").attr("height", viewport.height + 10);
     }
 
-    // function refreshTimeScale() {
-    //     console.log("Updating time scale")
-    //     viewport.scale = d3.scaleTime()
-    //         .domain([new Date(viewport.firstYear, 0, 1), new Date(viewport.firstYear + 1, 0, 1)])
-    //         .range([0, -viewport.yearSize]);
-    // }
 
     function updateGraphPosition() {
-        // d3.select("#mainGroup")
-        //     .transition()
-        //     .duration(1000)
-        //     .attr("transform",
-        //         "translate(0, " + (viewport.height - viewport.scale(viewport.displayStartDate)) + ")");
+
     }
 
 
     function refreshTimeAxis() {
-        // refreshTimeScale();
-
         //test code:
         var years = [];
         for (var y = 1918; y < 1940; y++) {
@@ -338,7 +337,7 @@
             return "translate(" + viewport.axisPosition + ", " + viewport.scale(new Date(year, 0, 1)) + ")";
         }
         var yearsSelection = d3.select("#mainGroup").selectAll(".timeAxisTick").data(years);
-        yearsSelection.transition(100).attr("transform", buildTransformFunc);
+        yearsSelection.transition().duration(100).attr("transform", buildTransformFunc);
 
         var groups = yearsSelection.enter().append("g");
         groups.attr("transform", buildTransformFunc)
@@ -381,10 +380,10 @@
     }
 
     function zoomEvent(event) {
-        console.log(d3.event.transform);
+        // console.log(d3.event.transform);
         var t = d3.event.transform;
-        viewport.scale=t.rescaleY(viewport.scaleOrig);
-
+        viewport.scale = t.rescaleY(viewport.scaleOrig);
+        viewport.currentZoomLevel = t.k;
         // viewport.yearSize = Math.round(d3.event.transform.k);
         refreshTimeAxis();
         refreshEventView();
@@ -396,9 +395,9 @@
 
     function wrapTextRect(d, i) {
         var NS = "http://www.w3.org/2000/svg";
-        console.log("Applying text wrap...");
-        console.log(d);
-        console.log(i);
+        // console.log("Applying text wrap...");
+        // console.log(d);
+        // console.log(i);
         //group selection:
         var groupSelection = d3.select(this);
 

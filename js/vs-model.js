@@ -14,6 +14,10 @@ class HistoryEvent {
             ,csvObject.name)
     }
 
+    isValid() {
+        return this.name && this.date && this.id && this.zoomRange[0];
+    }
+
     isRange() {
         return this.dateRange.length===0 && this.dateRange[1]
     }
