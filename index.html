@@ -15,6 +15,7 @@
     <script type="text/javascript" src="js/jquery/jquery-3.3.1.js"></script>
     <script type="text/javascript" src="js/bootstrap.js"></script>
     <script type="text/javascript" src="js/d3.js"></script>
+    <script type="text/javascript" src="js/vs-model.js"></script>
 </head>
 
 <body>
@@ -122,8 +123,15 @@
             </div>
             <div class="my-4 w-100" style="height: 90%">
                 <svg id="myChart" width="100%" height="100%" style="border-style: solid; border-color:black">
+                    <defs>
+                        <filter id="shadow">
+                            <feDropShadow dx="3" dy="3" stdDeviation="2" />
+                        </filter>
+                    </defs>
                     <g id="lanes"></g>
-                    <g id="mainGroup"></g>
+                    <g id="mainGroup">
+                        <g id="events"></g>
+                    </g>
                     <line id="timeAxis" class="timeAxis"></line>
                 </svg>
             </div>
@@ -149,6 +157,7 @@
     viewport.scaleOrig = d3.scaleTime();
     viewport.lanes = [{name: "Wydarzenia", x: 130, width: 250}];
     viewport.zoom = d3.zoom().scaleExtent([1, 10]);
+
 
     function initGraph() {
         //lanes
@@ -183,6 +192,7 @@
         refreshTimeAxis();
 
         d3.select("#myChart").call(viewport.zoom.on("zoom", zoomEvent));
+        loadDataCsv();
         loadData();
     }
 
@@ -196,16 +206,24 @@
         viewport.zoom.translateExtent([[0, 0], [viewport.width, viewport.height]]);
         updateAxisLine();
         refreshLanes();
-
     }
 
+
+    function loadDataCsv() {
+        d3.csv("data/dwudziestolecie.csv").then(function(data, error) {
+            console.log("Loaded csv");
+            console.log(data);
+            var instances = data.map(HistoryEvent.buildFromCsv);
+            console.log(instances);
+        });
+    }
 
     function loadData() {
         //d3js
         $.getJSON("data/events.json", function (data) {
             console.info("Got json, has size: " + data.length);
             // buildEventPars(data)
-            buildEventView(data);
+            updateEvents(data);
         });
     }
 
@@ -225,22 +243,25 @@
     }
 
     //create events
-    function buildEventView(items) {
+    function updateEvents(items) {
         console.log("Adding items, will add " + items.length);
         // console.log(items);
         //rect with text:
-        d3.select("#mainGroup").append("g").attr("id", "events");
-        var itemSelection = d3.select("#events").selectAll("g.item");
-        var itemGroupBuildSelection = itemSelection.data(items).enter();
-        buildEventGroup(itemGroupBuildSelection);
+        var itemSelection = d3.select("#events").selectAll("g.item").data(items);
+        buildEventGroup(itemSelection.enter());
+        itemSelection.exit().remove();
+
         console.log("Running wrap...");
         d3.select("#events")
             .selectAll("g.item")
             .each(wrapTextRect);
+
+
     }
 
     function buildEventGroup(buildSelection) {
         var lane = viewport.lanes[0];
+
         var groupSelection = buildSelection.append("g")
             .classed("item", true)
             .attr("transform", function (event) {
@@ -248,11 +269,22 @@
                 // console.log(d);
                 return "translate(" + (5 + lane.x) + ", " + viewport.scale(d) + ")";
             });
+        var corner=10;
 
         groupSelection.append("rect")
             .classed("item", true)
             .attr("width", lane.width - 10)
-            .attr("height", 50);
+            .attr("height", 50)
+            .attr("rx", corner)
+            .attr("ry", corner)
+        ;
+
+        groupSelection.append("line")
+            .attr("x1", -(lane.x-viewport.axisPosition+5))
+            .attr("y1", 0)
+            .attr("x2", corner)
+            .attr("y2", 0);
+
         groupSelection
             .append("text")
             .attr("y", 20)
@@ -357,12 +389,12 @@
         refreshTimeAxis();
         refreshEventView();
 
+        //update event list:
+
     }
 
 
-    //---onload and button---
     function wrapTextRect(d, i) {
-
         var NS = "http://www.w3.org/2000/svg";
         console.log("Applying text wrap...");
         console.log(d);

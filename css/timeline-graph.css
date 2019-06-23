@@ -12,11 +12,22 @@
     fill: black;
 }
 
-.item rect {
-    stroke: black;
-    fill: white;
+.item {
+    stroke: darkblue;
     stroke-width: 2px;
+}
+
+
+.item rect {
+    /*stroke: black;*/
+    fill: white;
+    /*stroke-width: 2px;*/
     box-shadow: darkgray;
+}
+
+.item text {
+    stroke: none;
+    fill: black;
 }
 
 rect.lane {
@@ -28,4 +39,8 @@ rect.lane {
 
 .lane text {
     fill: #FF5733;
+}
+
+#events {
+    filter:url(#shadow);
 }
