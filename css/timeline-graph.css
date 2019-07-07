@@ -18,12 +18,19 @@
 }
 
 
+.item path {
+    fill: none;
+}
+
+
 .item rect {
     /*stroke: black;*/
     fill: white;
     /*stroke-width: 2px;*/
-    box-shadow: darkgray;
+    /*box-shadow: darkgray;*/
 }
+
+
 
 .item text {
     stroke: none;
@@ -41,6 +48,10 @@ rect.lane {
     fill: #FF5733;
 }
 
-#events {
-    filter:url(#shadow);
-}
+/*.item  rect{*/
+/*    filter:url(#shadow);*/
+/*}*/
+
+/*#events {*/
+/*    filter:url(#shadow);*/
+/*}*/

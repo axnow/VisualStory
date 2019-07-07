@@ -155,7 +155,7 @@
     viewport.scaleOffset = 0;
     viewport.scale = d3.scaleTime();
     viewport.scaleOrig = d3.scaleTime();
-    viewport.lanes = [{name: "Wydarzenia", x: 130, width: 250}];
+    viewport.lanes = [{name: "Wydarzenia", x: 160, width: 250}];
     viewport.zoom = d3.zoom().scaleExtent([1, 10]);
     viewport.currentZoomLevel = 1;
 
@@ -220,17 +220,10 @@
             console.log("After filter:");
             console.log(instances);
             updateEvents(instances);
+            refreshEventView();
         });
     }
 
-    function loadData() {
-        //d3js
-        $.getJSON("data/events.json", function (data) {
-            console.info("Got json, has size: " + data.length);
-            // buildEventPars(data)
-            updateEvents(data);
-        });
-    }
 
     function eventText(event) {
         return event.date + ": " + event.name;
@@ -243,13 +236,20 @@
             .transition()
             .duration(100)
             .attr("transform", function (event) {
-                var d = new Date(event.date);
-                // console.log(d);
+                var d = new Date(event.beginning());
                 return "translate(" + (5 + lane.x) + ", " + viewport.scale(d) + ")";
             })
             .attr("visibility", function (event) {
-                return event.visibleInZoom(viewport.currentZoomLevel) ? "visible" : "hidden";
+                return event.visibleInZoom(Math.round(viewport.currentZoomLevel)) ? "visible" : "hidden";
             });
+
+        const corner = 10;
+        const xL = -(lane.x - viewport.axisPosition + 5);
+        itemSelection.select("path")
+            .transition()
+            .duration(100)
+            .attr("d", event => buildEventPath(event, xL, 0, corner));
+
 
     }
 
@@ -258,7 +258,7 @@
         console.log("Adding items, will add " + items.length);
         // console.log(items);
         //rect with text:
-        var itemSelection = d3.select("#events").selectAll("g.item").data(items);
+        var itemSelection = d3.select("#events").selectAll("g.item").data(items, item => item.id);
         buildEventGroup(itemSelection.enter());
         itemSelection.exit().remove();
 
@@ -270,17 +270,43 @@
 
     }
 
-    function buildEventGroup(buildSelection) {
-        var lane = viewport.lanes[0];
 
+    function eventPos(event) {
+        return datePos(new Date(event.beginning()));
+    }
+
+    function datePos(date) {
+        return viewport.scale(date);
+    }
+
+    function buildEventPath(event, x0, x1, extension) {
+        let hline = `M ${x0} 0 L ${x1 + extension} 0`;
+        if (event.isRange()) {
+            console.log(`Event ${event.name} end: `, event.end());
+            let dy = datePos(new Date(event.end())) - datePos(new Date(event.beginning()));
+            if (dy > 5) {
+                let xmed = (x0 + x1) / 2;
+                let c = `M ${x1} 0 C ${xmed} 0 ${xmed} ${dy} ${x0} ${dy}`;
+                return hline + " " + c;
+            } else {
+                return hline;
+            }
+
+        }
+        return hline
+    }
+
+    function buildEventGroup(buildSelection) {
+        const lane = viewport.lanes[0];
         var groupSelection = buildSelection.append("g")
             .classed("item", true)
             .attr("transform", function (event) {
-                var d = new Date(event.date);
-                // console.log(d);
-                return "translate(" + (5 + lane.x) + ", " + viewport.scale(d) + ")";
+                let yPos = eventPos(event);
+                return "translate(" + (5 + lane.x) + ", " + yPos + ")";
             });
-        var corner = 10;
+        const corner = 10;
+        const xL = -(lane.x - viewport.axisPosition + 5);
+
 
         groupSelection.append("rect")
             .classed("item", true)
@@ -290,11 +316,9 @@
             .attr("ry", corner)
         ;
 
-        groupSelection.append("line")
-            .attr("x1", -(lane.x - viewport.axisPosition + 5))
-            .attr("y1", 0)
-            .attr("x2", corner)
-            .attr("y2", 0);
+        groupSelection.append("path")
+            .attr("d", event => buildEventPath(event, xL, 0, corner));
+
 
         groupSelection
             .append("text")
