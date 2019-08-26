@@ -38,8 +38,8 @@
 }
 
 rect.lane {
-    fill:  #f8d78f ;
-    stroke: #ffbd33 ;
+    fill:  #FFEABE;
+    stroke: #CEAD68;
     stroke-width:2;
     opacity:1;
 }
