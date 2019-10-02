@@ -38,3 +38,18 @@ class HistoryEvent {
     }
 
 }
+
+//
+class EventView {
+    constructor(event) {
+        this.id = event.id;
+        this.data = event;
+        this.innerLane=0;
+
+    }
+
+
+    isValid() {
+        return data.isValid();
+    }
+}
