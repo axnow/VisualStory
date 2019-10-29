@@ -149,6 +149,13 @@ function createEvents(eventViews) {
     d3.select("#events")
         .selectAll("g.item")
         .each(wrapTextRect);
+
+    d3.select("#events")
+        .selectAll("g.item")
+        .each(function (item, index, node) {
+            item.pixelSize=d3.select(this).select("rect").attr("height");
+        });
+
     refreshEventView();
 
 }
@@ -307,7 +314,7 @@ function wrapTextRect(d, i) {
     console.log(d);
     console.log(i);
     //group selection:
-    var groupSelection = d3.select(this);
+    let groupSelection = d3.select(this);
 
     var myRect = groupSelection.select("rect").node();
     var myText = groupSelection.select("text").node();
