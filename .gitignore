@@ -1,2 +1,4 @@
 VisualStory.iml
 .idea
+/node_modules/*
+/dist/bundle.js

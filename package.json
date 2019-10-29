@@ -1,0 +1,39 @@
+{
+  "name": "visualstory",
+  "version": "1.0.0",
+  "description": "A modern d3 based engine for history visualizations.",
+  "private": true,
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/axnow/VisualStory.git"
+  },
+  "keywords": [
+    "history",
+    "d3.js",
+    "visualization",
+    "digital",
+    "humanities",
+    "timeline"
+  ],
+  "author": "Aleksander Nowinski",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/axnow/VisualStory/issues"
+  },
+  "homepage": "https://github.com/axnow/VisualStory#readme",
+  "devDependencies": {
+    "webpack": "^4.41.2",
+    "webpack-cli": "^3.3.9"
+  },
+  "dependencies": {
+    "bootstrap": "^4.3.1",
+    "d3": "^5.12.0",
+    "jquery": "^3.4.1",
+    "lodash": "^4.17.15",
+    "nodash": "^0.12.0",
+    "popper.js": "^1.16.0"
+  }
+}

@@ -1,4 +1,5 @@
-class HistoryEvent {
+
+export class HistoryEvent {
     constructor(id, dateRange, zoomRange, name) {
         this.id = id;
         this.date = dateRange[0];
@@ -39,8 +40,7 @@ class HistoryEvent {
 
 }
 
-//
-class EventView {
+export class EventView {
     constructor(event) {
         this.id = event.id;
         this.data = event;
