@@ -4,7 +4,8 @@
   "description": "A modern d3 based engine for history visualizations.",
   "private": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build": "webpack"
   },
   "repository": {
     "type": "git",
@@ -33,7 +34,6 @@
     "d3": "^5.12.0",
     "jquery": "^3.4.1",
     "lodash": "^4.17.15",
-    "nodash": "^0.12.0",
     "popper.js": "^1.16.0"
   }
 }

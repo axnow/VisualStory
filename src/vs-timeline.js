@@ -1,5 +1,6 @@
 import {HistoryEvent, EventView} from './vs-model';
 import * as d3 from "d3";
+import * as $ from "jquery";
 
 console.log("Script start...");
 
@@ -132,16 +133,22 @@ function refreshEventView() {
   let innerLaneCount = lane.lanes;
   let innerLaneWidth = lane.width / lane.lanes;
 
-  for (let i = 0; i < views.length; i++) {
-    views[i].innerLane = Math.floor(Math.random() * innerLaneCount);
-  }
+  let zoomLevelRounded = Math.round(viewport.currentZoomLevel);
+  _.forEach(views, function(v){v.innerLane=0;});
+  _.forEach(_.filter(views, v=>v.data.visibleInZoom(zoomLevelRounded)),
+    function (v, i) {
+      v.innerLane=i%innerLaneCount;
+    });
+  // for (let i = 0; i < views.length; i++) {
+  //   views[i].innerLane = Math.floor(Math.random() * innerLaneCount);
+  // }
 
   itemSelection
     .transition()
     .duration(100)
     .attr("transform", buildEventGroupTransformation())
     .attr("visibility", function (eventView) {
-      return eventView.data.visibleInZoom(Math.round(viewport.currentZoomLevel)) ? "visible" : "hidden";
+      return eventView.data.visibleInZoom(zoomLevelRounded) ? "visible" : "hidden";
     });
 
   const corner = 10;
