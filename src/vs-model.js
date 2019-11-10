@@ -23,15 +23,16 @@ export class HistoryEvent {
     }
 
     beginning() {
-        if (this.isRange()) {
-            return this.dateRange[1];
-        } else {
-            return this.date;
-        }
+      return this.dateRange[0];
+
     }
 
     end() {
-        return this.dateRange[0];
+      if (this.isRange()) {
+        return this.dateRange[1];
+      } else {
+        return this.date;
+      }
     }
 
     visibleInZoom(zoom) {

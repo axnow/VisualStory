@@ -5,22 +5,19 @@ import * as $ from "jquery";
 console.log("Script start...");
 
 window.viewport = {
-
-
+  width: 100,
+  height: 100,
+  axisPosition: 120,
+  firstYear: 1910,
+  datesExtent: [new Date("1916-01-01"), new Date("1939-12-31")],
+  displayStartDate: new Date("1918-01-01"),
+  scaleOffset: 0,
+  scale: d3.scaleTime(),
+  scaleOrig: d3.scaleTime(),
+  lanes: [{id: "events", name: "Wydarzenia", x: 160, width: 700, lanes: 4}],
+  zoom: d3.zoom().scaleExtent([1, 10]),
+  currentZoomLevel: 1
 };
-
-viewport.width = 100;
-viewport.height = 100;
-viewport.axisPosition = 120;
-viewport.firstYear = 1910;
-viewport.datesExtent = [new Date("1916-01-01"), new Date("1939-12-31")];
-viewport.displayStartDate = new Date("1918-01-01");
-viewport.scaleOffset = 0;
-viewport.scale = d3.scaleTime();
-viewport.scaleOrig = d3.scaleTime();
-viewport.lanes = [{id: "events", name: "Wydarzenia", x: 160, width: 400, lanes: 2}];
-viewport.zoom = d3.zoom().scaleExtent([1, 10]);
-viewport.currentZoomLevel = 1;
 
 
 export function initTimelineModule() {
@@ -120,7 +117,7 @@ function buildEventGroupTransformation() {
     if (typeof eventView.innerLane == 'undefined') {
       eventView.innerLane = 0;
     }
-    let d = new Date(event.beginning());
+    let d = new Date(event.end());
     return "translate(" + (5 + lane.x + eventView.innerLane * innerLaneWidth) + ", " + viewport.scale(d) + ")";
   };
 }
@@ -134,15 +131,17 @@ function refreshEventView() {
   let innerLaneWidth = lane.width / lane.lanes;
 
   let zoomLevelRounded = Math.round(viewport.currentZoomLevel);
-  _.forEach(views, function(v){v.innerLane=0;});
-  _.forEach(_.filter(views, v=>v.data.visibleInZoom(zoomLevelRounded)),
-    function (v, i) {
-      v.innerLane=i%innerLaneCount;
+  if (zoomLevelRounded != viewport.lastZoomLevelRounded) {
+    viewport.lastZoomLevelRounded = zoomLevelRounded;
+    _.forEach(views, function (v) {
+      v.innerLane = 0;
     });
-  // for (let i = 0; i < views.length; i++) {
-  //   views[i].innerLane = Math.floor(Math.random() * innerLaneCount);
-  // }
 
+    const filteredEvents = _.filter(views, v => v.data.visibleInZoom(zoomLevelRounded));
+    const sortedFilteredEvents = _.sortBy(filteredEvents, [iv=>iv.data.end]);
+    _.forEach(sortedFilteredEvents, function (v, i) {v.innerLane = i % innerLaneCount;});
+    itemSelection.sort((a, b) => d3.descending(a.innerLane, b.innerLane) || d3.ascending(a.data.end, b.data.end));
+  }
   itemSelection
     .transition()
     .duration(100)
@@ -197,8 +196,8 @@ function buildEventPath(eventView, x0, x1, extension) {
   let event = eventView.data;
   let hline = `M ${x0} 0 L ${x1 + extension} 0`;
   if (event.isRange()) {
-    console.log(`Event ${event.name} end: `, event.end());
-    let dy = datePos(new Date(event.end())) - datePos(new Date(event.beginning()));
+    // console.log(`Event ${event.name} end: `, event.end());
+    let dy = datePos(new Date(event.beginning())) - datePos(new Date(event.end()));
     if (dy > 5) {
       let xmed = (x0 + x1) / 2;
       let c = `M ${x1} 0 C ${xmed} 0 ${xmed} ${dy} ${x0} ${dy}`;
