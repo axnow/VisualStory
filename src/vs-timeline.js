@@ -14,7 +14,7 @@ window.viewport = {
   scaleOffset: 0,
   scale: d3.scaleTime(),
   scaleOrig: d3.scaleTime(),
-  lanes: [{id: "events", name: "Wydarzenia", x: 160, width: 700, lanes: 4}],
+  lanes: [{id: "events", name: "Wydarzenia", x: 160, width: 400, lanes: 2}],
   zoom: d3.zoom().scaleExtent([1, 10]),
   currentZoomLevel: 1
 };
@@ -138,7 +138,7 @@ function refreshEventView() {
     });
 
     const filteredEvents = _.filter(views, v => v.data.visibleInZoom(zoomLevelRounded));
-    const sortedFilteredEvents = _.sortBy(filteredEvents, [iv=>iv.data.end]);
+    const sortedFilteredEvents = _.sortBy(filteredEvents, iv=>iv.data.end());
     _.forEach(sortedFilteredEvents, function (v, i) {v.innerLane = i % innerLaneCount;});
     itemSelection.sort((a, b) => d3.descending(a.innerLane, b.innerLane) || d3.ascending(a.data.end, b.data.end));
   }
