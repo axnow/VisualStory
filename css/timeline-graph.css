@@ -1,51 +1,53 @@
 .timeAxis {
-    stroke: blue;
-    stroke-width: 3px;
+  stroke: blue;
+  stroke-width: 3px;
 }
 
-.timeAxisTick  {
-    stroke:none;
-    fill: blue;
+.timeAxisTick {
+  stroke: none;
+  fill: blue;
 }
 
-.timeAxisTick text  {
-    fill: black;
+.timeAxisTick text {
+  fill: black;
 }
 
 .item {
-    stroke: darkblue;
-    stroke-width: 2px;
+  stroke: #B28D3F;
+  stroke-width: 2px;
 }
 
 
-.item path {
-    fill: none;
+.item .filled-path {
+  fill: #CEAD68;
+  opacity: 0.2;
+  stroke: none;
+}
+
+.item .drawn-path {
+  fill: none;
 }
 
 
 .item rect {
-    /*stroke: black;*/
-    fill: white;
-    /*stroke-width: 2px;*/
-    /*box-shadow: darkgray;*/
+  fill: #FFF2D7;
 }
-
 
 
 .item text {
-    stroke: none;
-    fill: black;
+  stroke: none;
+  fill: black;
 }
 
 rect.lane {
-    fill:  #FFEABE;
-    stroke: #CEAD68;
-    stroke-width:2;
-    opacity:1;
+  fill: #FFEABE;
+  stroke: #CEAD68;
+  stroke-width: 2;
+  opacity: 1;
 }
 
 .lane text {
-    fill: #FF5733;
+  fill: #FF5733;
 }
 
 /*.item  rect{*/

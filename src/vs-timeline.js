@@ -32,7 +32,6 @@ export function initTimelineModule() {
 
 }
 
-
 function initGraph() {
   //lanes
   var laneGroupSelection = d3.select("#lanes").selectAll("g.lane")
@@ -50,7 +49,6 @@ function initGraph() {
   }).attr("y", 20).text(function (lane) {
     return lane.name;
   });
-
 
   console.log(viewport);
   viewport.scale = d3.scaleTime()
@@ -125,7 +123,7 @@ function buildEventGroupTransformation() {
 function refreshEventView() {
   let lane = findLaneById("events");
   let itemSelection = d3.select("#events").selectAll("g.item");
-  //re-random inner lanes:
+
   let views = itemSelection.data();
   let innerLaneCount = lane.lanes;
   let innerLaneWidth = lane.width / lane.lanes;
@@ -138,24 +136,36 @@ function refreshEventView() {
     });
 
     const filteredEvents = _.filter(views, v => v.data.visibleInZoom(zoomLevelRounded));
-    const sortedFilteredEvents = _.sortBy(filteredEvents, iv=>iv.data.end());
-    _.forEach(sortedFilteredEvents, function (v, i) {v.innerLane = i % innerLaneCount;});
+    const sortedFilteredEvents = _.sortBy(filteredEvents, iv => iv.data.end());
+    _.forEach(sortedFilteredEvents, function (v, i) {
+      v.innerLane = i % innerLaneCount;
+    });
     itemSelection.sort((a, b) => d3.descending(a.innerLane, b.innerLane) || d3.ascending(a.data.end, b.data.end));
   }
+
+
   itemSelection
-    .transition()
-    .duration(100)
     .attr("transform", buildEventGroupTransformation())
-    .attr("visibility", function (eventView) {
-      return eventView.data.visibleInZoom(zoomLevelRounded) ? "visible" : "hidden";
-    });
 
   const corner = 10;
   const xL = -(lane.x - viewport.axisPosition + 5);
-  itemSelection.select("path")
+  itemSelection
+    .select(".filled-path")
+    .attr("d", eventView => buildEventPath(eventView, xL - eventView.innerLane * innerLaneWidth, 0, corner, true));
+  itemSelection
+    .select(".drawn-path")
+    .attr("d", eventView => buildEventPath(eventView, xL - eventView.innerLane * innerLaneWidth, 0, corner, false));
+
+  itemSelection
     .transition()
-    .duration(100)
-    .attr("d", eventView => buildEventPath(eventView, xL - eventView.innerLane * innerLaneWidth, 0, corner));
+    .duration(500)
+    .attr("visibility", function (eventView) {
+      return eventView.data.visibleInZoom(zoomLevelRounded) ? "visible" : "hidden";
+    }).attr("opacity", function (eventView) {
+    return eventView.data.visibleInZoom(zoomLevelRounded) ? 1.0 : 0.0;
+  });
+
+
 }
 
 
@@ -176,11 +186,9 @@ function createEvents(eventViews) {
   d3.select("#events")
     .selectAll("g.item")
     .each(function (item, index, node) {
-      item.pixelSize = d3.select(this).select("rect").attr("height");
+      item.pixelSize = parseInt(d3.select(this).select("rect").attr("height"));
     });
-
-  refreshEventView();
-
+  // refreshEventView();
 }
 
 
@@ -192,29 +200,38 @@ function datePos(date) {
   return viewport.scale(date);
 }
 
-function buildEventPath(eventView, x0, x1, extension) {
+function buildEventPath(eventView, x0, x1, extension, closed) {
   let event = eventView.data;
-  let hline = `M ${x0} 0 L ${x1 + extension} 0`;
+  let xEv = x1 + extension;
+  let resPath = `M ${x0} 0 L ${xEv} 0`;
   if (event.isRange()) {
-    // console.log(`Event ${event.name} end: `, event.end());
     let dy = datePos(new Date(event.beginning())) - datePos(new Date(event.end()));
-    if (dy > 5) {
-      let xmed = (x0 + x1) / 2;
-      let c = `M ${x1} 0 C ${xmed} 0 ${xmed} ${dy} ${x0} ${dy}`;
-      return hline + " " + c;
-    } else {
-      return hline;
-    }
+    if (dy > 5) { //if it is smaller, we do not draw area, makes no sense.
+      let lowerY = 0;
+      if (eventView.pixelSize) {
+        lowerY = eventView.pixelSize;
+        resPath += ` ${closed ? "l" : "m"} 0 ${lowerY}`;
+      }
+      resPath += ` h ${-extension}`;
+      // let xmid = (x0 + x1) *(dy<lowerY? 0.3:0.85);
+      let xmid = dy > lowerY ? x0 + 10 : x1 - 10;
+      let ymed = (dy + lowerY) / 2;
 
+      // resPath += ` C ${xmed} ${lowerY} ${xmed} ${dy} ${x0} ${dy}`;
+      resPath += ` C ${xmid} ${lowerY} ${xmid} ${lowerY} ${xmid} ${ymed}`;
+      resPath += ` C ${xmid} ${dy} ${xmid} ${dy} ${x0} ${dy}`;
+      if (closed) {
+        resPath += " z";
+      }
+    }
   }
-  return hline
+  return resPath;
 }
 
 function buildEventGroup(buildSelection) {
   let lane = findLaneById("events");
-  let innerLane = Math.floor(Math.random() * lane.lanes);
+  let innerLane = 0;
   let innerLaneWidth = lane.width / lane.lanes;
-
 
   let groupSelection = buildSelection.append("g")
     .classed("item", true)
@@ -223,16 +240,21 @@ function buildEventGroup(buildSelection) {
   const xL = -(lane.x - viewport.axisPosition + 5);
 
 
+  groupSelection.append("path")
+    .classed("filled-path", true)
+    .attr("d", eventView => buildEventPath(eventView, xL, 0, corner, true));
+
+  groupSelection.append("path")
+    .classed("drawn-path", true)
+    .attr("d", eventView => buildEventPath(eventView, xL, 0, corner, false));
+
   groupSelection.append("rect")
-    .classed("item", true)
+  // .classed("item", true)
     .attr("width", innerLaneWidth - 10)
     .attr("height", 50)
     .attr("rx", corner)
     .attr("ry", corner)
   ;
-
-  groupSelection.append("path")
-    .attr("d", eventView => buildEventPath(eventView, xL, 0, corner));
 
   groupSelection
     .append("text")
