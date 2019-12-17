@@ -178,6 +178,14 @@ function createEvents(eventViews) {
   buildEventGroup(itemSelection.enter());
   itemSelection.exit().remove();
 
+  d3.select("#events").selectAll("g.item").select("rect").on("mouseover", function(d, i, node) {
+    d3.select(this).classed("highlight", true);
+  });
+
+  d3.select("#events").selectAll("g.item").select("rect").on("mouseout", function(d, i, node) {
+    d3.select(this).classed("highlight", false);
+  });
+
   console.log("Running wrap...");
   d3.select("#events")
     .selectAll("g.item")
@@ -345,9 +353,9 @@ function zoomEvent(event) {
 
 function wrapTextRect(d, i) {
   var NS = "http://www.w3.org/2000/svg";
-  console.log("Applying text wrap...");
-  console.log(d);
-  console.log(i);
+  // console.log("Applying text wrap...");
+  // console.log(d);
+  // console.log(i);
   //group selection:
   let groupSelection = d3.select(this);
 
