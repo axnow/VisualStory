@@ -64,6 +64,11 @@ function initGraph() {
   refreshTimeAxis();
 
   d3.select("#myChart").call(viewport.zoom.on("zoom", zoomEvent));
+  d3.select("#myChart").on("click", function(d, i, node) {
+    eventSelected();
+    d3.event.stopPropagation();
+  });
+
   loadDataCsv();
   // loadData();
 }
@@ -115,7 +120,7 @@ function buildEventGroupTransformation() {
     if (typeof eventView.innerLane == 'undefined') {
       eventView.innerLane = 0;
     }
-    let d = new Date(event.end());
+    let d = new Date(event.end);
     return "translate(" + (5 + lane.x + eventView.innerLane * innerLaneWidth) + ", " + viewport.scale(d) + ")";
   };
 }
@@ -136,7 +141,7 @@ function refreshEventView() {
     });
 
     const filteredEvents = _.filter(views, v => v.data.visibleInZoom(zoomLevelRounded));
-    const sortedFilteredEvents = _.sortBy(filteredEvents, iv => iv.data.end());
+    const sortedFilteredEvents = _.sortBy(filteredEvents, iv => iv.data.end);
     _.forEach(sortedFilteredEvents, function (v, i) {
       v.innerLane = i % innerLaneCount;
     });
@@ -169,30 +174,53 @@ function refreshEventView() {
 }
 
 
+function eventSelected(d) {
+  if(d) {
+    console.log("Selecting event "+d.id);
+    d3.select("#details-card").attr("hidden",null);
+    d3.select("#details-title").text(d.data.name);
+    d3.select("#details-subtitle").text(d.data.beginning);
+    d3.select("#details-text").text(d.data.id);
+  } else {
+    console.log("Hiding the description card");
+    d3.select("#details-card").attr("hidden", "true");
+  }
+}
+
 //create events
 function createEvents(eventViews) {
   console.log("Adding events, will add " + eventViews.length + " items.");
   // console.log(items);
   //rect with text:
+
   let itemSelection = d3.select("#events").selectAll("g.item").data(eventViews, item => item.id);
   buildEventGroup(itemSelection.enter());
   itemSelection.exit().remove();
+  let eventItemSelection = d3.select("#events").selectAll("g.item");
 
-  d3.select("#events").selectAll("g.item").select("rect").on("mouseover", function(d, i, node) {
+  eventItemSelection.on("mouseenter", function(d, i, node) {
     d3.select(this).classed("highlight", true);
+    console.log("Entered...");
+    console.log(d);
   });
 
-  d3.select("#events").selectAll("g.item").select("rect").on("mouseout", function(d, i, node) {
+  eventItemSelection.on("mouseleave", function(d, i, node) {
     d3.select(this).classed("highlight", false);
+    console.log("rLeaving...");
   });
+  eventItemSelection.on("click", function(d, i, node) {
+    console.log("Exectuing click on node "+d.id);
+    eventSelected(d);
+    d3.event.stopPropagation();
+  }, true);
+
+
 
   console.log("Running wrap...");
-  d3.select("#events")
-    .selectAll("g.item")
+  eventItemSelection
     .each(wrapTextRect);
 
-  d3.select("#events")
-    .selectAll("g.item")
+  eventItemSelection
     .each(function (item, index, node) {
       item.pixelSize = parseInt(d3.select(this).select("rect").attr("height"));
     });
@@ -201,7 +229,7 @@ function createEvents(eventViews) {
 
 
 function eventPos(event) {
-  return datePos(new Date(event.beginning()));
+  return datePos(new Date(event.beginning));
 }
 
 function datePos(date) {
@@ -213,7 +241,7 @@ function buildEventPath(eventView, x0, x1, extension, closed) {
   let xEv = x1 + extension;
   let resPath = `M ${x0} 0 L ${xEv} 0`;
   if (event.isRange()) {
-    let dy = datePos(new Date(event.beginning())) - datePos(new Date(event.end()));
+    let dy = datePos(new Date(event.beginning)) - datePos(new Date(event.end));
     if (dy > 5) { //if it is smaller, we do not draw area, makes no sense.
       let lowerY = 0;
       if (eventView.pixelSize) {

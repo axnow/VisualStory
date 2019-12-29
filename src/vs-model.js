@@ -1,5 +1,5 @@
 export class HistoryEvent {
-  constructor(id, dateRange, zoomRange, name) {
+  constructor(id, dateRange, zoomRange, name, description, wikipediaId, pictureName) {
     this.id = id;
     this.date = dateRange[0];
     if (dateRange.length === 2 && dateRange[1]) {
@@ -9,6 +9,9 @@ export class HistoryEvent {
     }
     this.zoomRange = zoomRange;
     this.name = name;
+    this.description = description;
+    this.wikipediaId = wikipediaId;
+    this.pictureName = pictureName;
   }
 
   static buildFromCsv(csvObject) {
@@ -25,18 +28,19 @@ export class HistoryEvent {
     return this.dateRange.length === 2 && this.dateRange[1]
   }
 
-  beginning() {
+  get beginning() {
     return this.dateRange[0];
-
   }
 
-  end() {
+  get end() {
     if (this.isRange()) {
       return this.dateRange[1];
     } else {
       return this.date;
     }
   }
+
+
 
   visibleInZoom(zoom) {
     return zoom >= this.zoomRange[0] && (!this.zoomRange[1] || zoom <= this.zoomRange[1]);
