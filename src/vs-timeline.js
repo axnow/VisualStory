@@ -178,12 +178,27 @@ function eventSelected(d) {
   if(d) {
     console.log("Selecting event "+d.id);
     d3.select("#details-card").attr("hidden",null);
-    d3.select("#details-title").text(d.data.name);
-    d3.select("#details-subtitle").text(d.data.beginning);
-    d3.select("#details-text").text(d.data.id);
+    const eventData = d.data;
+    d3.select("#details-title").text(eventData.name);
+    d3.select("#details-subtitle").text(eventData.formattedDate);
+
+    let description = eventData.description;
+    if(!description) {
+      description=`no description provided for event <i>${eventData.id}<\i>`
+    }
+    d3.select("#details-text").html(description);
+    const wikipediaLinkSelection = d3.select("#details-wikipedia");
+    if(eventData.wikipediaId) {
+      wikipediaLinkSelection
+        .attr("href", `https://pl.wikipedia.org/wiki/${eventData.wikipediaId}`)
+        .attr("hidden", null);
+    } else {
+      wikipediaLinkSelection.attr("hidden", "true");
+    }
   } else {
     console.log("Hiding the description card");
     d3.select("#details-card").attr("hidden", "true");
+
   }
 }
 

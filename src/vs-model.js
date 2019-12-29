@@ -17,7 +17,7 @@ export class HistoryEvent {
   static buildFromCsv(csvObject) {
     return new HistoryEvent(csvObject.id, [csvObject.date_from, csvObject.date_to],
       [csvObject.zoom_min, csvObject.zoom_max]
-      , csvObject.name)
+      , csvObject.name, csvObject.description, csvObject.wikipedia_id, csvObject.image);
   }
 
   isValid() {
@@ -40,6 +40,13 @@ export class HistoryEvent {
     }
   }
 
+  get formattedDate() {
+    if(this.isRange()) {
+      return `${this.beginning} - ${this.end}`;
+    } else {
+      return `${this.beginning}`;
+    }
+  }
 
 
   visibleInZoom(zoom) {
