@@ -57,12 +57,13 @@ export class HistoryEvent {
 
 export class EventView {
   constructor(event) {
-    this.id = event.id;
     this.data = event;
     this.innerLane = 0;
-
   }
 
+  get id() {
+    return this.data.id;
+  }
 
   isValid() {
     return data.isValid();

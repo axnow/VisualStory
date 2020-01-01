@@ -91,6 +91,13 @@
                         <filter id="shadow">
                             <feDropShadow dx="3" dy="3" stdDeviation="2"/>
                         </filter>
+                        <filter id="glow">
+                          <feGaussianBlur stdDeviation="2.5" result="coloredBlur"/>
+                          <feMerge>
+                            <feMergeNode in="coloredBlur"/>
+                            <feMergeNode in="SourceGraphic"/>
+                          </feMerge>
+                        </filter>
                     </defs>
                     <g id="lanes"></g>
                     <g id="mainGroup">

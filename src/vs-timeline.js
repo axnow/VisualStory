@@ -2,7 +2,7 @@ import {HistoryEvent, EventView} from './vs-model';
 import * as d3 from "d3";
 import * as $ from "jquery";
 
-console.log("Script start...");
+console.log("Initializing vis story core module");
 
 window.viewport = {
   width: 100,
@@ -24,7 +24,7 @@ export function initTimelineModule() {
   $(window).resize(refreshGraphSize);
 
   window.addEventListener("load", function () {
-    console.log("Onload.");
+    console.log("Executing onload event.");
     setTimeout(refreshGraphSize, 1000);
     // refreshGraphSize();
     setTimeout(initGraph, 1100);
@@ -87,15 +87,14 @@ function refreshGraphSize() {
 
 
 function loadDataCsv() {
-  d3.csv("data/dwudziestolecie.csv").then(function (data, error) {
-    console.log("Loaded csv");
-    console.log(data);
+  const csvName = "data/dwudziestolecie.csv";
+  d3.csv(csvName).then(function (data, error) {
+    console.log(`Parsed CSV file ${csvName}, got ${data.length} rows of data.`);
+    console.log(`Following properties found in CSV: ${Object.keys(data[0])}`);
+    // console.log(data);
     let eventData = data.map(HistoryEvent.buildFromCsv);
-    console.log(eventData);
     eventData = eventData.filter(ins => ins.isValid());
-    console.log("After filter:");
-    console.log(eventData);
-    console.debug("Wrapping into event views");
+    console.log(`Successfully created ${eventData.length} items, first 10 are: ${eventData.slice(0, Math.min(10, eventData.length)).map(e=>e.id)}`);
     let eventViews = eventData.map(ev => new EventView(ev));
     //-> to event view.
     createEvents(eventViews);
@@ -148,7 +147,6 @@ function refreshEventView() {
     itemSelection.sort((a, b) => d3.descending(a.innerLane, b.innerLane) || d3.ascending(a.data.end, b.data.end));
   }
 
-
   itemSelection
     .attr("transform", buildEventGroupTransformation())
 
@@ -175,6 +173,11 @@ function refreshEventView() {
 
 
 function eventSelected(d) {
+  let selectedId = d? d.id: null;
+  d3.selectAll(".item").classed("selected", function(d){
+    return d.id===selectedId;
+  });
+
   if(d) {
     console.log("Selecting event "+d.id);
     d3.select("#details-card").attr("hidden",null);
@@ -198,7 +201,6 @@ function eventSelected(d) {
   } else {
     console.log("Hiding the description card");
     d3.select("#details-card").attr("hidden", "true");
-
   }
 }
 
@@ -215,13 +217,10 @@ function createEvents(eventViews) {
 
   eventItemSelection.on("mouseenter", function(d, i, node) {
     d3.select(this).classed("highlight", true);
-    console.log("Entered...");
-    console.log(d);
   });
 
   eventItemSelection.on("mouseleave", function(d, i, node) {
     d3.select(this).classed("highlight", false);
-    console.log("rLeaving...");
   });
   eventItemSelection.on("click", function(d, i, node) {
     console.log("Exectuing click on node "+d.id);

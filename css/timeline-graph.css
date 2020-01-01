@@ -12,10 +12,25 @@
   fill: black;
 }
 
-.item.highlight {
+/* Selected by click */
+.item.selected {
+  stroke: #CEAD68;
+  stroke-width: 3px;
+  filter:url(#glow);
+}
+
+.item.selected rect {
+  fill: #FFF2D7;
+}
+
+
+.item.highlight-referring {
   stroke: red;
   stroke-width: 6px;
   box-shadow: darkgray;
+}
+.item.highlight {
+  filter:url(#glow);
 }
 
 .item {
@@ -35,7 +50,7 @@
 }
 
 .item rect {
-  fill: #FFF2D7;
+  fill: #FFEABE;
 }
 
 
@@ -48,7 +63,7 @@ rect.lane {
   fill: #FFEABE;
   stroke: #CEAD68;
   stroke-width: 2;
-  opacity: 1;
+  opacity: .4;
 }
 
 .lane text {
