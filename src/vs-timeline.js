@@ -2,7 +2,7 @@ import {HistoryEvent, EventView} from './vs-model';
 import * as d3 from "d3";
 import * as $ from "jquery";
 
-console.log("Script start...");
+console.log("Initializing vis story core module");
 
 window.viewport = {
   width: 100,
@@ -24,7 +24,7 @@ export function initTimelineModule() {
   $(window).resize(refreshGraphSize);
 
   window.addEventListener("load", function () {
-    console.log("Onload.");
+    console.log("Executing onload event.");
     setTimeout(refreshGraphSize, 1000);
     // refreshGraphSize();
     setTimeout(initGraph, 1100);
@@ -64,6 +64,11 @@ function initGraph() {
   refreshTimeAxis();
 
   d3.select("#myChart").call(viewport.zoom.on("zoom", zoomEvent));
+  d3.select("#myChart").on("click", function(d, i, node) {
+    eventSelected();
+    d3.event.stopPropagation();
+  });
+
   loadDataCsv();
   // loadData();
 }
@@ -82,15 +87,14 @@ function refreshGraphSize() {
 
 
 function loadDataCsv() {
-  d3.csv("data/dwudziestolecie.csv").then(function (data, error) {
-    console.log("Loaded csv");
-    console.log(data);
+  const csvName = "data/dwudziestolecie.csv";
+  d3.csv(csvName).then(function (data, error) {
+    console.log(`Parsed CSV file ${csvName}, got ${data.length} rows of data.`);
+    console.log(`Following properties found in CSV: ${Object.keys(data[0])}`);
+    // console.log(data);
     let eventData = data.map(HistoryEvent.buildFromCsv);
-    console.log(eventData);
     eventData = eventData.filter(ins => ins.isValid());
-    console.log("After filter:");
-    console.log(eventData);
-    console.debug("Wrapping into event views");
+    console.log(`Successfully created ${eventData.length} items, first 10 are: ${eventData.slice(0, Math.min(10, eventData.length)).map(e=>e.id)}`);
     let eventViews = eventData.map(ev => new EventView(ev));
     //-> to event view.
     createEvents(eventViews);
@@ -115,7 +119,7 @@ function buildEventGroupTransformation() {
     if (typeof eventView.innerLane == 'undefined') {
       eventView.innerLane = 0;
     }
-    let d = new Date(event.end());
+    let d = new Date(event.end);
     return "translate(" + (5 + lane.x + eventView.innerLane * innerLaneWidth) + ", " + viewport.scale(d) + ")";
   };
 }
@@ -136,13 +140,12 @@ function refreshEventView() {
     });
 
     const filteredEvents = _.filter(views, v => v.data.visibleInZoom(zoomLevelRounded));
-    const sortedFilteredEvents = _.sortBy(filteredEvents, iv => iv.data.end());
+    const sortedFilteredEvents = _.sortBy(filteredEvents, iv => iv.data.end);
     _.forEach(sortedFilteredEvents, function (v, i) {
       v.innerLane = i % innerLaneCount;
     });
     itemSelection.sort((a, b) => d3.descending(a.innerLane, b.innerLane) || d3.ascending(a.data.end, b.data.end));
   }
-
 
   itemSelection
     .attr("transform", buildEventGroupTransformation())
@@ -169,22 +172,69 @@ function refreshEventView() {
 }
 
 
+function eventSelected(d) {
+  let selectedId = d? d.id: null;
+  d3.selectAll(".item").classed("selected", function(d){
+    return d.id===selectedId;
+  });
+
+  if(d) {
+    console.log("Selecting event "+d.id);
+    d3.select("#details-card").attr("hidden",null);
+    const eventData = d.data;
+    d3.select("#details-title").text(eventData.name);
+    d3.select("#details-subtitle").text(eventData.formattedDate);
+
+    let description = eventData.description;
+    if(!description) {
+      description=`no description provided for event <i>${eventData.id}<\i>`
+    }
+    d3.select("#details-text").html(description);
+    const wikipediaLinkSelection = d3.select("#details-wikipedia");
+    if(eventData.wikipediaId) {
+      wikipediaLinkSelection
+        .attr("href", `https://pl.wikipedia.org/wiki/${eventData.wikipediaId}`)
+        .attr("hidden", null);
+    } else {
+      wikipediaLinkSelection.attr("hidden", "true");
+    }
+  } else {
+    console.log("Hiding the description card");
+    d3.select("#details-card").attr("hidden", "true");
+  }
+}
+
 //create events
 function createEvents(eventViews) {
   console.log("Adding events, will add " + eventViews.length + " items.");
   // console.log(items);
   //rect with text:
+
   let itemSelection = d3.select("#events").selectAll("g.item").data(eventViews, item => item.id);
   buildEventGroup(itemSelection.enter());
   itemSelection.exit().remove();
+  let eventItemSelection = d3.select("#events").selectAll("g.item");
+
+  eventItemSelection.on("mouseenter", function(d, i, node) {
+    d3.select(this).classed("highlight", true);
+  });
+
+  eventItemSelection.on("mouseleave", function(d, i, node) {
+    d3.select(this).classed("highlight", false);
+  });
+  eventItemSelection.on("click", function(d, i, node) {
+    console.log("Exectuing click on node "+d.id);
+    eventSelected(d);
+    d3.event.stopPropagation();
+  }, true);
+
+
 
   console.log("Running wrap...");
-  d3.select("#events")
-    .selectAll("g.item")
+  eventItemSelection
     .each(wrapTextRect);
 
-  d3.select("#events")
-    .selectAll("g.item")
+  eventItemSelection
     .each(function (item, index, node) {
       item.pixelSize = parseInt(d3.select(this).select("rect").attr("height"));
     });
@@ -193,7 +243,7 @@ function createEvents(eventViews) {
 
 
 function eventPos(event) {
-  return datePos(new Date(event.beginning()));
+  return datePos(new Date(event.beginning));
 }
 
 function datePos(date) {
@@ -205,7 +255,7 @@ function buildEventPath(eventView, x0, x1, extension, closed) {
   let xEv = x1 + extension;
   let resPath = `M ${x0} 0 L ${xEv} 0`;
   if (event.isRange()) {
-    let dy = datePos(new Date(event.beginning())) - datePos(new Date(event.end()));
+    let dy = datePos(new Date(event.beginning)) - datePos(new Date(event.end));
     if (dy > 5) { //if it is smaller, we do not draw area, makes no sense.
       let lowerY = 0;
       if (eventView.pixelSize) {
@@ -345,9 +395,9 @@ function zoomEvent(event) {
 
 function wrapTextRect(d, i) {
   var NS = "http://www.w3.org/2000/svg";
-  console.log("Applying text wrap...");
-  console.log(d);
-  console.log(i);
+  // console.log("Applying text wrap...");
+  // console.log(d);
+  // console.log(i);
   //group selection:
   let groupSelection = d3.select(this);
 

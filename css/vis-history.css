@@ -75,7 +75,8 @@ html,body {
  */
 
 [role="main"] {
-    padding-top: 133px; /* Space for fixed navbar */
+    padding-top: 33px; /* Space for fixed navbar */
+    /*padding-top: 133px; !* Space for fixed navbar *!*/
 }
 
 @media (min-width: 768px) {
